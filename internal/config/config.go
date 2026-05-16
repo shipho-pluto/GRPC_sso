@@ -13,6 +13,7 @@ type Config struct {
 	TokenTTL  time.Duration `yaml:"token_ttl" env-required:"true"`
 	GRPC      GRPC          `yaml:"grpc"`
 	DataStore DataStore     `yaml:"datastore"`
+	Clients   ClientsConfig `yaml:"clients"`
 }
 
 type DataStore struct {
@@ -41,6 +42,19 @@ type Cache struct {
 type GRPC struct {
 	Port    int           `yaml:"port" env-required:"true"`
 	Timeout time.Duration `yaml:"timeout" env-required:"true"`
+}
+
+type Broker struct {
+	Address      string `yaml:"address"`
+	TopicName    string `yaml:"topic"`
+	Network      string `yaml:"network"`
+	Partitions   int    `yaml:"partitions"`
+	Replications int    `yaml:"replications"`
+	GroupID      string `yaml:"group_id"`
+}
+
+type ClientsConfig struct {
+	Broker Broker `yaml:"kafka"`
 }
 
 func MustLoad() *Config {

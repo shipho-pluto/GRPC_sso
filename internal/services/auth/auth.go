@@ -25,6 +25,7 @@ type Auth struct {
 	usrSaver    UserSaver
 	usrProvider UserProvider
 	appProvider AppProvider
+	clients     Broker
 	tokenTTL    time.Duration
 }
 
@@ -45,11 +46,17 @@ type AppProvider interface {
 	App(ctx context.Context, appID int32) (models.App, error)
 }
 
+type Broker interface {
+	ProduceMessage(ctx context.Context, msg models.MessageToBroker) error
+	ConsumeMessage(ctx context.Context)
+}
+
 func New(
 	log *slog.Logger,
 	userSaver UserSaver,
 	userProvider UserProvider,
 	appProvider AppProvider,
+	clients Broker,
 	tokenTTL time.Duration,
 ) *Auth {
 	return &Auth{
@@ -57,6 +64,7 @@ func New(
 		usrSaver:    userSaver,
 		usrProvider: userProvider,
 		appProvider: appProvider,
+		clients:     clients,
 		tokenTTL:    tokenTTL,
 	}
 }

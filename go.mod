@@ -9,7 +9,11 @@ require (
 
 require golang.org/x/crypto v0.51.0
 
-require github.com/pkg/errors v0.9.1 // indirect
+require (
+	github.com/klauspost/compress v1.15.9 // indirect
+	github.com/pierrec/lz4/v4 v4.1.15 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+)
 
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
@@ -18,6 +22,7 @@ require (
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/lib/pq v1.12.3
 	github.com/pressly/goose v2.7.0+incompatible
+	github.com/segmentio/kafka-go v0.4.51
 	github.com/shipho-pluto/grpc_proto v0.0.1
 	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect

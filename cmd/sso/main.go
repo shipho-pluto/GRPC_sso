@@ -18,10 +18,11 @@ func main() {
 	log.Info("starting application...", slog.String("env", cfg.Env))
 	log.Debug("start debug logger")
 
-	application := app.New(log, cfg.GRPC.Port, &cfg.DataStore, cfg.TokenTTL)
+	application := app.New(log, cfg.GRPC.Port, &cfg.DataStore, &cfg.Clients.Broker, cfg.TokenTTL)
 
 	go application.GRPCApp.MustRun()
 	go application.StorageApp.MustRun()
+	go application.Clients.MustRun()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
@@ -31,6 +32,7 @@ func main() {
 
 	application.GRPCApp.Stop()
 	application.StorageApp.Stop()
+	application.Clients.Stop()
 	log.Info("application stopped")
 
 	//TODO: kafka between sso & url

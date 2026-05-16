@@ -3,6 +3,7 @@ package app
 import (
 	grpcapp "grpc_sso/internal/app/grpc"
 	storapp "grpc_sso/internal/app/storage"
+	"grpc_sso/internal/clients"
 	"grpc_sso/internal/config"
 	"grpc_sso/internal/services/auth"
 	"log/slog"
@@ -12,22 +13,27 @@ import (
 type App struct {
 	StorageApp *storapp.App
 	GRPCApp    *grpcapp.App
+	Clients    *clients.Clients
 }
 
 func New(
 	log *slog.Logger,
 	grpcPort int,
 	storage *config.DataStore,
+	broker *config.Broker,
 	tokenTTL time.Duration,
 ) *App {
 
 	storageApp := storapp.NewApp(log, storage)
 
-	auth := auth.New(log, storageApp, storageApp, storageApp, tokenTTL)
+	cls := clients.NewApp(log, broker)
+
+	auth := auth.New(log, storageApp, storageApp, storageApp, cls, tokenTTL)
 
 	grpcApp := grpcapp.NewApp(log, grpcPort, auth)
 
 	return &App{
+		Clients:    cls,
 		GRPCApp:    grpcApp,
 		StorageApp: storageApp,
 	}
