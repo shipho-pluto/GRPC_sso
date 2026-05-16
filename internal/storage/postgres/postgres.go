@@ -24,7 +24,7 @@ type Storage struct {
 }
 
 func NewStorage(storage config.Storage) *Storage {
-	var pgInfo = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+	var pgInfo = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		storage.Host, storage.Port, storage.User, storage.Password, storage.DBName, storage.SSLMode)
 	return &Storage{
 		info: pgInfo,

@@ -22,7 +22,7 @@ type DataStore struct {
 
 type Storage struct {
 	Host     string `yaml:"host" env:"STORAGE_HOST"`
-	Port     int    `yaml:"port" env:"STORAGE_PORT"`
+	Port     string `yaml:"port" env:"STORAGE_PORT"`
 	User     string `yaml:"user" env:"STORAGE_USER"`
 	DBName   string `yaml:"dbname" env:"STORAGE_DBNAME"`
 	Password string `yaml:"password" env:"STORAGE_PASSWORD"`

@@ -33,8 +33,6 @@ func main() {
 	application.StorageApp.Stop()
 	log.Info("application stopped")
 
-	//TODO: client on url
-	//TODO: cache grpc handlers on url
 	//TODO: kafka between sso & url
 	//TODO: tests
 }

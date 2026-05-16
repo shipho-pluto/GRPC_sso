@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"grpc_sso/internal/config"
@@ -58,7 +59,13 @@ func (c *Cache) Close() {
 
 func (c *Cache) CacheUser(ctx context.Context, user models.User) error {
 	const op = "redis.CacheUser"
-	err := c.cl.Set(user.Email, user, expirationTime).Err()
+
+	code, err := json.Marshal(user)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	err = c.cl.Set(user.Email, code, expirationTime).Err()
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -68,7 +75,13 @@ func (c *Cache) CacheUser(ctx context.Context, user models.User) error {
 
 func (c *Cache) CacheApp(ctx context.Context, app models.App) error {
 	const op = "redis.CacheApp"
-	err := c.cl.Set(i32ToS(app.ID), app, expirationTime).Err()
+
+	code, err := json.Marshal(app)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	err = c.cl.Set(i32ToS(app.ID), code, expirationTime).Err()
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

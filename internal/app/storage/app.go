@@ -10,7 +10,6 @@ import (
 	"grpc_sso/internal/storage/postgres"
 	"grpc_sso/internal/storage/redis"
 	"log/slog"
-	"strconv"
 )
 
 type App struct {
@@ -136,5 +135,5 @@ func (a *App) App(ctx context.Context, appID int32) (models.App, error) {
 }
 
 func pgAddr(cfg config.Storage) string {
-	return cfg.Host + ":" + strconv.Itoa(cfg.Port)
+	return cfg.Host + ":" + cfg.Port
 }
