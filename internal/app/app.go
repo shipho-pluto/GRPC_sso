@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	grpcapp "grpc_sso/internal/app/grpc"
 	storapp "grpc_sso/internal/app/storage"
 	"grpc_sso/internal/clients"
@@ -23,10 +24,11 @@ func New(
 	broker *config.Broker,
 	tokenTTL time.Duration,
 ) *App {
+	ctx := context.Background()
 
 	storageApp := storapp.NewApp(log, storage)
 
-	cls := clients.NewApp(log, broker)
+	cls := clients.NewApp(ctx, log, broker)
 
 	auth := auth.New(log, storageApp, storageApp, storageApp, cls, tokenTTL)
 

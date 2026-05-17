@@ -19,7 +19,7 @@ func main() {
 
 	storage := config.MustLoad().DataStore.Storage
 
-	var dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+	var dsn = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		storage.Host, storage.Port, storage.User, storage.Password, storage.DBName, storage.SSLMode)
 
 	db, err := sql.Open("postgres", dsn)

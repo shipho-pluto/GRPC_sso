@@ -23,18 +23,17 @@ func main() {
 	go application.GRPCApp.MustRun()
 	go application.StorageApp.MustRun()
 	go application.Clients.MustRun()
+	go application.Clients.ConsumeMessage()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
 	sign := <-stop
-	log.Debug("stopping aplication...", slog.String("signal", sign.String()))
+	log.Info("stopping aplication...", slog.String("signal", sign.String()))
 
 	application.GRPCApp.Stop()
 	application.StorageApp.Stop()
 	application.Clients.Stop()
 	log.Info("application stopped")
-
-	//TODO: kafka between sso & url
 	//TODO: tests
 }

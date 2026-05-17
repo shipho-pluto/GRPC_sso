@@ -9,8 +9,8 @@ import (
 )
 
 type Config struct {
-	Env       string        `yaml:"env" env-default:"local"`
-	TokenTTL  time.Duration `yaml:"token_ttl" env-required:"true"`
+	Env       string        `yaml:"env" env:"ENV" env-default:"local"`
+	TokenTTL  time.Duration `yaml:"token_ttl" env:"TOKEN_TTL" env-default:"1h"`
 	GRPC      GRPC          `yaml:"grpc"`
 	DataStore DataStore     `yaml:"datastore"`
 	Clients   ClientsConfig `yaml:"clients"`
@@ -22,35 +22,35 @@ type DataStore struct {
 }
 
 type Storage struct {
-	Host     string `yaml:"host" env:"STORAGE_HOST"`
-	Port     string `yaml:"port" env:"STORAGE_PORT"`
-	User     string `yaml:"user" env:"STORAGE_USER"`
-	DBName   string `yaml:"dbname" env:"STORAGE_DBNAME"`
-	Password string `yaml:"password" env:"STORAGE_PASSWORD"`
-	SSLMode  string `yaml:"sslmode"`
+	Host     string `yaml:"host" env:"DB_HOST"`
+	Port     string `yaml:"port" env:"DB_PORT"`
+	User     string `yaml:"user" env:"DB_USER"`
+	DBName   string `yaml:"dbname" env:"DB_NAME"`
+	Password string `yaml:"password" env:"DB_PASSWORD"`
+	SSLMode  string `yaml:"sslmode" env:"DB_SSLMODE"`
 }
 
 type Cache struct {
-	Addr        string        `yaml:"addr"`
-	Password    string        `yaml:"password"`
-	DB          int           `yaml:"db"`
-	MaxRetries  int           `yaml:"max_retries"`
-	DialTimeout time.Duration `yaml:"dial_timeout"`
-	Timeout     time.Duration `yaml:"timeout"`
+	Addr        string        `yaml:"addr" env:"REDIS_ADDR"`
+	Password    string        `yaml:"password" env:"REDIS_PASSWORD"`
+	DB          int           `yaml:"db" env:"REDIS_DB"`
+	MaxRetries  int           `yaml:"max_retries" env:"REDIS_MAX_RETRIES"`
+	DialTimeout time.Duration `yaml:"dial_timeout" env:"REDIS_DIAL_TIMEOUT"`
+	Timeout     time.Duration `yaml:"timeout" env:"REDIS_TIMEOUT"`
 }
 
 type GRPC struct {
-	Port    int           `yaml:"port" env-required:"true"`
-	Timeout time.Duration `yaml:"timeout" env-required:"true"`
+	Port    int           `yaml:"port" env:"GRPC_PORT"`
+	Timeout time.Duration `yaml:"timeout" env:"GRPC_TIMEOUT" env-default:"10h"`
 }
 
 type Broker struct {
-	Address      string `yaml:"address"`
-	TopicName    string `yaml:"topic"`
-	Network      string `yaml:"network"`
-	Partitions   int    `yaml:"partitions"`
-	Replications int    `yaml:"replications"`
-	GroupID      string `yaml:"group_id"`
+	Address      string `yaml:"address" env:"KAFKA_ADDRESS"`
+	TopicName    string `yaml:"topic" env:"KAFKA_TOPIC"`
+	Network      string `yaml:"network" env:"KAFKA_NETWORK"`
+	Partitions   int    `yaml:"partitions" env:"KAFKA_PARTITIONS"`
+	Replications int    `yaml:"replications" env:"KAFKA_REPLICATIONS"`
+	GroupID      string `yaml:"group_id" env:"KAFKA_GROUP_ID"`
 }
 
 type ClientsConfig struct {

@@ -25,7 +25,7 @@ type Auth struct {
 	usrSaver    UserSaver
 	usrProvider UserProvider
 	appProvider AppProvider
-	clients     Broker
+	broker      Broker
 	tokenTTL    time.Duration
 }
 
@@ -47,8 +47,7 @@ type AppProvider interface {
 }
 
 type Broker interface {
-	ProduceMessage(ctx context.Context, msg models.MessageToBroker) error
-	ConsumeMessage(ctx context.Context)
+	ProduceMessage(msg models.MessageToBroker) error
 }
 
 func New(
@@ -56,7 +55,7 @@ func New(
 	userSaver UserSaver,
 	userProvider UserProvider,
 	appProvider AppProvider,
-	clients Broker,
+	broker Broker,
 	tokenTTL time.Duration,
 ) *Auth {
 	return &Auth{
@@ -64,7 +63,7 @@ func New(
 		usrSaver:    userSaver,
 		usrProvider: userProvider,
 		appProvider: appProvider,
-		clients:     clients,
+		broker:      broker,
 		tokenTTL:    tokenTTL,
 	}
 }
@@ -79,6 +78,9 @@ func (a *Auth) Login(
 
 	log := a.log.With(
 		slog.String("op", op),
+		slog.String("email", email),
+		slog.String("password", pass),
+		slog.Int("app_id", int(appID)),
 	)
 
 	log.Info("attemtimg to login user")
@@ -87,6 +89,10 @@ func (a *Auth) Login(
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			a.log.Warn("user not found", sl.Err(err))
+			a.broker.ProduceMessage(models.MessageToBroker{
+				Key:   op,
+				Value: "be careful, might be scammers",
+			})
 
 			return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 		}
@@ -134,6 +140,8 @@ func (a *Auth) RegisterUser(
 
 	log := a.log.With(
 		slog.String("op", op),
+		slog.String("email", email),
+		slog.String("password", pass),
 	)
 
 	log.Info("registering user")
@@ -194,6 +202,7 @@ func (a *Auth) Logout(ctx context.Context, userID int64) (bool, error) {
 
 	log := a.log.With(
 		slog.String("op", op),
+		slog.Int64("user_id", userID),
 	)
 
 	log.Info("attemtimg to login user")
@@ -202,6 +211,10 @@ func (a *Auth) Logout(ctx context.Context, userID int64) (bool, error) {
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			a.log.Warn("user not found", sl.Err(err))
+			a.broker.ProduceMessage(models.MessageToBroker{
+				Key:   op,
+				Value: "be careful, might be scammers",
+			})
 
 			return false, fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 		}

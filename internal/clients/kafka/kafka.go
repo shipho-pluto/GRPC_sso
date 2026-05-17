@@ -17,17 +17,19 @@ type Broker struct {
 	options options
 	Reader  *kafka.Reader
 	Writer  *kafka.Writer
+	ctx     context.Context
 }
 
 type options struct {
 	topic             string
 	address           string
+	groupID           string
 	network           string
 	numPartitions     int
 	replicationFactor int
 }
 
-func New(log *slog.Logger, cfg *config.Broker) *Broker {
+func New(ctx context.Context, log *slog.Logger, cfg *config.Broker) *Broker {
 	const op = "kafka.New"
 
 	r := kafka.NewReader(kafka.ReaderConfig{
@@ -42,6 +44,7 @@ func New(log *slog.Logger, cfg *config.Broker) *Broker {
 		topic:             cfg.TopicName,
 		numPartitions:     cfg.Partitions,
 		replicationFactor: cfg.Replications,
+		groupID:           cfg.GroupID,
 	}
 
 	w := kafka.NewWriter(kafka.WriterConfig{
@@ -50,6 +53,7 @@ func New(log *slog.Logger, cfg *config.Broker) *Broker {
 	})
 
 	return &Broker{
+		ctx:     ctx,
 		log:     log,
 		options: options,
 		Reader:  r,
@@ -61,9 +65,6 @@ func (b *Broker) MustRun() {
 	if err := b.Run(); err != nil {
 		panic(err)
 	}
-	cxt := context.Background()
-	b.log.Info("running consumer message")
-	b.ConsumeMessage(cxt)
 }
 
 func (b *Broker) Run() error {
@@ -110,12 +111,28 @@ func (b *Broker) Stop() {
 	b.conn.Close()
 }
 
-func (b *Broker) ConsumeMessage(ctx context.Context) {
+func (b *Broker) ConsumeMessage() {
 	const op = "kafka.ConsumeMessage"
 	for {
-		msg, err := b.Reader.ReadMessage(ctx)
+		msg, err := b.Reader.ReadMessage(b.ctx)
 		if err != nil {
 			b.log.Error("error with read message", sl.Err(err))
+			continue
+		}
+
+		var sender string
+		for _, header := range msg.Headers {
+			if header.Key == "sender" {
+				sender = string(header.Value)
+				break
+			}
+		}
+
+		if sender == b.options.groupID {
+			b.log.Debug("skipping own message",
+				slog.String("sender", sender),
+				slog.String("key", string(msg.Key)))
+			continue
 		}
 
 		b.log.Info("[CATCHED MESSAGE]",
@@ -126,15 +143,18 @@ func (b *Broker) ConsumeMessage(ctx context.Context) {
 	}
 }
 
-func (b *Broker) ProduceMessage(ctx context.Context, msg models.MessageToBroker) error {
+func (b *Broker) ProduceMessage(msg models.MessageToBroker) error {
 	const op = "kafka.ProduceMessage"
 
 	kafkaMsg := kafka.Message{
 		Key:   []byte(fmt.Sprintf("key-%s", msg.Key)),
-		Value: []byte(fmt.Sprintf("Mwssage-%s", msg.Value)),
+		Value: []byte(fmt.Sprintf("Message-%s", msg.Value)),
+		Headers: []kafka.Header{
+			{Key: "sender", Value: []byte(b.options.groupID)},
+		},
 	}
 
-	err := b.Writer.WriteMessages(ctx, kafkaMsg)
+	err := b.Writer.WriteMessages(b.ctx, kafkaMsg)
 	if err != nil {
 		b.log.Error("error with sending message", sl.Err(err))
 		return fmt.Errorf("%s: %w", op, err)

@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"context"
 	"grpc_sso/internal/clients/kafka"
 	"grpc_sso/internal/config"
 	"log/slog"
@@ -11,8 +12,8 @@ type Clients struct {
 	log *slog.Logger
 }
 
-func NewApp(log *slog.Logger, cfg *config.Broker) *Clients {
-	broker := kafka.New(log, cfg)
+func NewApp(ctx context.Context, log *slog.Logger, cfg *config.Broker) *Clients {
+	broker := kafka.New(ctx, log, cfg)
 	return &Clients{
 		log:    log,
 		Broker: broker,
