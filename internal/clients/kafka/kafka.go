@@ -61,6 +61,9 @@ func (b *Broker) MustRun() {
 	if err := b.Run(); err != nil {
 		panic(err)
 	}
+	cxt := context.Background()
+	b.log.Info("running consumer message")
+	b.ConsumeMessage(cxt)
 }
 
 func (b *Broker) Run() error {
@@ -68,14 +71,14 @@ func (b *Broker) Run() error {
 
 	log := b.log.With(
 		slog.String("op", op),
+		slog.String("addr", b.options.address),
+		slog.String("topic name", b.options.topic),
 	)
 
 	conn, err := kafka.Dial(b.options.network, b.options.address)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
-
-	log.Info("kafla is created")
 
 	topicConfigs := []kafka.TopicConfig{
 		{
@@ -98,8 +101,11 @@ func (b *Broker) Run() error {
 func (b *Broker) Stop() {
 	const op = "kafka.Stop"
 
-	b.log.With(slog.String("op", op)).
-		Info("stopping broker")
+	b.log.With(
+		slog.String("op", op),
+		slog.String("addr", b.options.address),
+		slog.String("topic name", b.options.topic),
+	).Info("stopping broker")
 
 	b.conn.Close()
 }
