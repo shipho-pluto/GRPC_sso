@@ -59,22 +59,11 @@ type ClientsConfig struct {
 
 func MustLoad() *Config {
 	cfgPath := fetchConfigPath()
-
 	if cfgPath == "" {
 		panic("config path is empty")
 	}
 
-	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
-		panic("config file does not exist: " + cfgPath)
-	}
-
-	var cfg Config
-
-	if err := cleanenv.ReadConfig(cfgPath, &cfg); err != nil {
-		panic("failed to read config: " + err.Error())
-	}
-
-	return &cfg
+	return MustLoadByPath(cfgPath)
 }
 
 func fetchConfigPath() string {
@@ -88,4 +77,18 @@ func fetchConfigPath() string {
 	}
 
 	return res
+}
+
+func MustLoadByPath(cfgPath string) *Config {
+	if _, err := os.Stat(cfgPath); err != nil {
+		panic("config path does not exists: " + cfgPath)
+	}
+
+	var cfg Config
+
+	if err := cleanenv.ReadConfig(cfgPath, &cfg); err != nil {
+		panic("failed to read config: " + err.Error())
+	}
+
+	return &cfg
 }

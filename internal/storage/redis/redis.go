@@ -103,11 +103,16 @@ func (c *Cache) CacheIsAdmin(ctx context.Context, uid int64, is_admin bool) erro
 func (c *Cache) User(ctx context.Context, email string) (models.User, error) {
 	const op = "redis.User"
 
-	var user models.User
-	if err := c.cl.Get(email).Scan(&user); err != nil {
+	val, err := c.cl.Get(email).Result()
+	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return models.User{}, storage.ErrorNotInRedis
 		}
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var user models.User
+	if err := json.Unmarshal([]byte(val), &user); err != nil {
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -117,11 +122,16 @@ func (c *Cache) User(ctx context.Context, email string) (models.User, error) {
 func (c *Cache) App(ctx context.Context, app_id int32) (models.App, error) {
 	const op = "redis.App"
 
-	var app models.App
-	if err := c.cl.Get(i32ToS(app_id)).Scan(&app); err != nil {
+	val, err := c.cl.Get(i32ToS(app_id)).Result()
+	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return models.App{}, storage.ErrorNotInRedis
 		}
+		return models.App{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var app models.App
+	if err := json.Unmarshal([]byte(val), &app); err != nil {
 		return models.App{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -131,15 +141,15 @@ func (c *Cache) App(ctx context.Context, app_id int32) (models.App, error) {
 func (c *Cache) IsAdmin(ctx context.Context, uid int64) (bool, error) {
 	const op = "redis.IsAdmin"
 
-	var is_admin bool
-	if err := c.cl.Get(i64ToS(uid)).Scan(&is_admin); err != nil {
+	is_admin, err := c.cl.Get(i64ToS(uid)).Result()
+	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return false, storage.ErrorNotInRedis
 		}
 		return false, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return is_admin, nil
+	return isAdminTrue(is_admin), nil
 }
 
 func i64ToS(x int64) string {
@@ -148,4 +158,8 @@ func i64ToS(x int64) string {
 
 func i32ToS(x int32) string {
 	return strconv.Itoa(int(x))
+}
+
+func isAdminTrue(is_admin string) bool {
+	return is_admin == "true"
 }

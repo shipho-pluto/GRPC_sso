@@ -113,10 +113,17 @@ func (b *Broker) Stop() {
 
 func (b *Broker) ConsumeMessage() {
 	const op = "kafka.ConsumeMessage"
+
+	log := b.log.With(
+		slog.String("op", op),
+		slog.String("addr", b.options.address),
+		slog.String("topic name", b.options.topic),
+	)
+
 	for {
 		msg, err := b.Reader.ReadMessage(b.ctx)
 		if err != nil {
-			b.log.Error("error with read message", sl.Err(err))
+			log.Error("error with read message", sl.Err(err))
 			continue
 		}
 
@@ -129,13 +136,13 @@ func (b *Broker) ConsumeMessage() {
 		}
 
 		if sender == b.options.groupID {
-			b.log.Debug("skipping own message",
+			log.Debug("skipping own message",
 				slog.String("sender", sender),
 				slog.String("key", string(msg.Key)))
 			continue
 		}
 
-		b.log.Info("[CATCHED MESSAGE]",
+		log.Info("[CATCHED MESSAGE]",
 			slog.String("key", string(msg.Key)),
 			slog.String("value", string(msg.Value)),
 			slog.Int64("offset", msg.Offset),
@@ -145,6 +152,12 @@ func (b *Broker) ConsumeMessage() {
 
 func (b *Broker) ProduceMessage(msg models.MessageToBroker) error {
 	const op = "kafka.ProduceMessage"
+
+	log := b.log.With(
+		slog.String("op", op),
+		slog.String("addr", b.options.address),
+		slog.String("topic name", b.options.topic),
+	)
 
 	kafkaMsg := kafka.Message{
 		Key:   []byte(fmt.Sprintf("key-%s", msg.Key)),
@@ -156,9 +169,9 @@ func (b *Broker) ProduceMessage(msg models.MessageToBroker) error {
 
 	err := b.Writer.WriteMessages(b.ctx, kafkaMsg)
 	if err != nil {
-		b.log.Error("error with sending message", sl.Err(err))
+		log.Error("error with sending message", sl.Err(err))
 		return fmt.Errorf("%s: %w", op, err)
 	}
-	b.log.Info("sent message successfully")
+	log.Info("sent message successfully")
 	return nil
 }

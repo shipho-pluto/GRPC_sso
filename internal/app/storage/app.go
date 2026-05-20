@@ -88,7 +88,7 @@ func (a *App) User(ctx context.Context, email string) (models.User, error) {
 		if errors.Is(err, storage.ErrorNotInRedis) {
 			user, err = a.pgDB.User(ctx, email)
 			if err != nil {
-				return user, nil
+				return models.User{}, err
 			}
 			if err := a.redisCl.CacheUser(ctx, user); err != nil {
 				return models.User{}, err
@@ -105,7 +105,7 @@ func (a *App) IsAdmin(ctx context.Context, userID int64) (bool, error) {
 		if errors.Is(err, storage.ErrorNotInRedis) {
 			is_admin, err = a.pgDB.IsAdmin(ctx, userID)
 			if err != nil {
-				return is_admin, nil
+				return false, err
 			}
 			if err := a.redisCl.CacheIsAdmin(ctx, userID, is_admin); err != nil {
 				return false, err
@@ -122,7 +122,7 @@ func (a *App) App(ctx context.Context, appID int32) (models.App, error) {
 		if errors.Is(err, storage.ErrorNotInRedis) {
 			app, err = a.pgDB.App(ctx, appID)
 			if err != nil {
-				return app, nil
+				return models.App{}, err
 			}
 			if err := a.redisCl.CacheApp(ctx, app); err != nil {
 				return models.App{}, err

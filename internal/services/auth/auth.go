@@ -17,6 +17,7 @@ import (
 var (
 	ErrUserExists         = errors.New("user already exist")
 	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrUserNotFound       = errors.New("user not found")
 	ErrInvalidAppID       = errors.New("invalid app_id")
 )
 
@@ -185,14 +186,14 @@ func (a *Auth) IsAdmin(ctx context.Context, userID int64) (bool, error) {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			a.log.Warn("user not found", sl.Err(err))
 
-			return false, fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
+			return false, fmt.Errorf("%s: %w", op, ErrUserNotFound)
 		}
 		log.Error("failed to get user", sl.Err(err))
 
 		return false, fmt.Errorf("%s: %w", op, err)
 	}
 
-	log.Info("checking is user is admin", slog.Bool("is_admin", isAdmin))
+	log.Info("checking is user admin", slog.Bool("is_admin", isAdmin))
 
 	return isAdmin, nil
 }
@@ -216,7 +217,7 @@ func (a *Auth) Logout(ctx context.Context, userID int64) (bool, error) {
 				Value: "be careful, might be scammers",
 			})
 
-			return false, fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
+			return false, fmt.Errorf("%s: %w", op, ErrUserNotFound)
 		}
 		log.Error("failed to get user", sl.Err(err))
 

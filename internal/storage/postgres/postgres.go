@@ -143,7 +143,7 @@ func (s *Storage) App(ctx context.Context, appID int32) (models.App, error) {
 	if err := stmt.QueryRowContext(ctx, appID).
 		Scan(&app.ID, &app.Name, &app.Secret); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return models.App{}, fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
+			return models.App{}, fmt.Errorf("%s: %w", op, storage.ErrAppNotFound)
 		}
 		return models.App{}, fmt.Errorf("%s: %w", op, err)
 	}

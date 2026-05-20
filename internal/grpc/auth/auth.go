@@ -50,11 +50,11 @@ func (s *serverAPI) Login(
 
 	token, err := s.auth.Login(ctx, req.Email, req.Password, int32(req.AppId))
 	if err != nil {
-		if err == auth.ErrInvalidCredentials {
-			return nil, status.Error(codes.InvalidArgument, "invalid arguments")
+		if errors.Is(err, auth.ErrInvalidCredentials) {
+			return nil, status.Error(codes.InvalidArgument, "invalid credentials")
 		}
-		if err == auth.ErrInvalidAppID {
-			return nil, status.Error(codes.InvalidArgument, "invalid service")
+		if errors.Is(err, auth.ErrInvalidAppID) {
+			return nil, status.Error(codes.InvalidArgument, "unexpected service")
 		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
@@ -75,9 +75,7 @@ func (s *serverAPI) Register(
 	userID, err := s.auth.RegisterUser(ctx, req.Email, req.Password)
 	if err != nil {
 		if errors.Is(err, auth.ErrUserExists) {
-			// можно сделать AlreadyExists, но я не хочу чтоб по почте
-			// можно было узнать зарегестрирован ли знакомый тебе человек
-			return nil, status.Error(codes.InvalidArgument, "invalid arguments")
+			return nil, status.Error(codes.AlreadyExists, "user already exists")
 		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
@@ -97,8 +95,8 @@ func (s *serverAPI) IsAdmin(
 
 	isAdmim, err := s.auth.IsAdmin(ctx, req.UserId)
 	if err != nil {
-		if errors.Is(err, auth.ErrInvalidCredentials) {
-			return nil, status.Error(codes.InvalidArgument, "invalid arguments")
+		if errors.Is(err, auth.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
 		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
@@ -118,8 +116,8 @@ func (s *serverAPI) Logout(
 
 	ok, err := s.auth.IsAdmin(ctx, req.UserId)
 	if err != nil {
-		if errors.Is(err, auth.ErrInvalidCredentials) {
-			return nil, status.Error(codes.InvalidArgument, "invalid arguments")
+		if errors.Is(err, auth.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
 		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
